@@ -16,35 +16,69 @@ use MongoDB\Laravel\Eloquent\Casts\ObjectId;
 class AuthController extends Controller
 {
     // register a new user method
-    public function CreateUser(RegisterRequest $request)
-    {
 
-        $data = $request->validated();
+public function CreateAdmin(Request $request)
+{
+    // Validation rules
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email|max:255',
+        'tel' => 'required|numeric|digits:8|unique:users,tel',
+        'city' => 'required|string|max:255',
+        'address' => 'required|string|max:255',
+        'zip' => 'required|numeric|digits:4',
+        'password' => 'required|string|min:8',
+    ], [
+        // French validation messages
+        'name.required' => 'Le nom est requis.',
+        'email.required' => "L'adresse e-mail est requise.",
+        'email.email' => "L'adresse e-mail doit être valide.",
+        'email.unique' => "L'adresse e-mail est déjà utilisée.",
+        'tel.required' => 'Le numéro de téléphone est requis.',
+        'tel.numeric' => 'Le numéro de téléphone doit être un nombre.',
+        'tel.digits' => 'Le numéro de téléphone doit comporter exactement 8 chiffres.',
+        'tel.unique' => 'Le numéro de téléphone est déjà utilisé.',
+        'city.required' => 'La ville est requise.',
+        'address.required' => "L'adresse est requise.",
+        'zip.required' => 'Le code postal est requis.',
+        'zip.numeric' => 'Le code postal doit être un nombre.',
+        'zip.digits' => 'Le code postal doit comporter exactement 4 chiffres.',
+        'password.required' => 'Le mot de passe est requis.',
+        'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+    ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role' => $data['role'],
-            'blocked' => false,
-            'password' => Hash::make($data['password']),
-        ]);
-        if ($user->role == "2") {
-            $subdomain = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['name'])) . $user->id;
-            $user->subdomain = $subdomain;
-            $user->save();
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        $cookie = cookie('token', $token, 60 * 24); // 1 day
-
-        $role = $user->role == "1" ? 'Admin' : 'Client';
-
+    // If validation fails
+    if ($validator->fails()) {
         return response()->json([
-            'user' => $user,
-            'message' => $role . ' ajouté avec succès !'
-        ])->withCookie($cookie);
+            'errors' => $validator->errors(),
+        ], 422);
     }
+
+    // Create user
+    $user = User::create([
+        'name' => $request->input('name'),
+        'email' => $request->input('email'),
+        'tel' => $request->input('tel'),
+        'city' => $request->input('city'),
+        'address' => $request->input('address'),
+        'zip' => $request->input('zip'),
+        'blocked' => false,
+        'role' => "1",
+        'password' => Hash::make($request->input('password')),
+    ]);
+
+    $subdomain = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $request->input('name'))) . $user->id;
+    $user->subdomain = $subdomain;
+    $user->save();
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+    $cookie = cookie('token', $token, 60 * 24); // 1 day
+
+    return response()->json([
+        'user' => $user,
+    ])->withCookie($cookie);
+}
+
 
 
 
@@ -228,5 +262,40 @@ class AuthController extends Controller
             'message' => 'Password updated successfully.',
         ]);
     }
+
+
+
+    // public function CreateClient(Request $request)
+    // {
+    //     $data = $request->validated();
+
+    //     $user = User::create([
+    //         'name' => $data['name'],
+    //         'email' => $data['email'],
+    //         'tel' => $data['tel'],
+    //         'city' => $data['city'],
+    //         'address' => $data['address'],
+    //         'zip' => $data['zip'],
+    //         'blocked' => false,
+    //         'role'=>"1",
+    //         'password' => Hash::make($data['password']),
+    //     ]);
+    //     if ($user->role == "2") {
+    //         $subdomain = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['name'])) . $user->id;
+    //         $user->subdomain = $subdomain;
+    //         $user->save();
+    //     }
+
+    //     $token = $user->createToken('auth_token')->plainTextToken;
+
+    //     $cookie = cookie('token', $token, 60 * 24); // 1 day
+
+    //     $role = $user->role == "1" ? 'Admin' : 'Client';
+
+    //     return response()->json([
+    //         'user' => $user,
+    //         'message' => $role . ' ajouté avec succès !'
+    //     ])->withCookie($cookie);
+    // }
 
 }
