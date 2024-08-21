@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('zip')->nullable();
             $table->string('address')->nullable();
-
+            $table->string('image')->nullable();
             $table->string('role');
             $table->boolean('blocked')->default(false);
             $table->string('subdomain')->nullable();

@@ -12,6 +12,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Validator;
 use MongoDB\Laravel\Eloquent\Casts\ObjectId;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -72,10 +73,11 @@ public function CreateAdmin(Request $request)
     $user->save();
 
     $token = $user->createToken('auth_token')->plainTextToken;
-    $cookie = cookie('token', $token, 60 * 24); // 1 day
+
+        $cookie = cookie('token', $token, 60 * 24, '/', env('SESSION_DOMAIN', '.example.shop'), true, true, false, 'None');
 
     return response()->json([
-        'user' => $user,
+        'user' => new UserResource($user),
     ])->withCookie($cookie);
 }
 
@@ -168,45 +170,64 @@ public function CreateAdmin(Request $request)
     }
 
     public function updateAdmin(Request $request, $id)
-    {
-        // Convert $id to ObjectId for MongoDB compatibility
+{
+    // Validate request data
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users')->ignore($id, '_id'),
+        ],
+        'tel' => ['nullable', 'integer', 'digits:8'],
+        'city' => 'nullable|string|max:255',
+        'address' => 'nullable|string|max:255',
+        'password' => 'nullable|string|min:6|confirmed',
+        'zip' => 'nullable|string|min:4|max:4',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,bmp,gif,svg|max:2048',
+    ]);
 
+    // Find the admin user by ID
+    $admin = User::findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($id, '_id'),
-            ],
-            'tel' => ['nullable', 'integer', 'digits:8'],
-            'city' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'password' => 'nullable|string|min:6|confirmed',
-            'zip' => 'nullable|string|min:4|max:4',
-        ]);
+    // Update user attributes
+    $admin->name = $data['name'];
+    $admin->tel = $data['tel'];
+    $admin->city = $data['city'];
+    $admin->address = $data['address'];
+    $admin->zip = $data['zip'];
 
-        $admin = User::findOrFail($id);
-
-        $admin->name = $data['name'];
-        $admin->tel = $data['tel'];
-        $admin->city = $data['city'];
-        $admin->address = $data['address'];
-        $admin->zip = $data['zip'];
-
-        if (!empty($data['email'])) {
-            $admin->email = $data['email'];
-        }
-
-        if (!empty($data['password'])) {
-            $admin->password = Hash::make($data['password']);
-        }
-
-        $admin->save();
-
-        return response()->json($admin);
+    // Update email if provided
+    if (!empty($data['email'])) {
+        $admin->email = $data['email'];
     }
+
+    // Handle image upload
+    if ($request->hasFile('image')) {
+        // Delete the old image if it exists and a new image is being uploaded
+        if ($admin->image && Storage::exists('public/img/profile/' . $admin->image)) {
+            Storage::delete('public/img/profile/' . $admin->image);
+        }
+
+        // Store the new image
+        $image = $request->file('image');
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $image->storeAs('public/img/profile', $imageName);
+        $admin->image = $imageName;
+    }
+
+    // Update password if provided
+    if (!empty($data['password'])) {
+        $admin->password = Hash::make($data['password']);
+    }
+
+    // Save the updated user record
+    $admin->update();
+
+    // Return the updated user as JSON response
+    return response()->json($admin);
+}
 
 
 

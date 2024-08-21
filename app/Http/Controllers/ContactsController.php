@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\contacts;
 use App\Models\User;
+use App\Models\contacts;
 use Illuminate\Http\Request;
+use App\Mail\ContactFormSubmitted;
+use Illuminate\Support\Facades\Mail;
 
 class ContactsController extends Controller
 {
@@ -24,20 +26,28 @@ class ContactsController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request, $admin_id)
+    public function create(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'mail' => 'string|max:255',
-            'mobile' => 'string|max:255',
-            'message' => 'string|max:255',
+            'name' => 'required|string|max:255',
+            'mail' => 'required|string|max:255',
+            'mobile' => 'nullable|numeric|digits:8',
+            'message' => 'required|string|max:255',
         ]);
-        $contact = contacts::create([
+
+        $contactData = [
             'name' => $request->input('name'),
             'mail' => $request->input('mail'),
             'mobile' => $request->input('mobile'),
             'message' => $request->input('message'),
-        ]);
+        ];
+
+        // Save to database
+        $contact = Contacts::create($contactData);
+
+        // Send email
+        Mail::to($contactData['mail'])->send(new ContactFormSubmitted($contactData));
+
         return response()->json($contact, 201);
     }
 
@@ -59,7 +69,7 @@ class ContactsController extends Controller
         $contact->mobile = $request->input('mobile');
         $contact->message = $request->input('message');
         $contact->save();
-        
+
         return response()->json($contact);
     }
 

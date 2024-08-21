@@ -20,6 +20,7 @@ class UserResource extends JsonResource {
             'blocked' => $this->blocked,
             'subdomain'=>$this->subdomain,
             'tel'=>$this->tel,
+            'image'=>$this->image,
             'city'=>$this->city,
             'address'=>$this->address,
             'zip'=>$this->zip,

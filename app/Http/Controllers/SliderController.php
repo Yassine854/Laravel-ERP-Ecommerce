@@ -76,7 +76,6 @@ class SliderController extends Controller
         $image = $request->file('image');
         $imageName = time() . '_' . $image->getClientOriginalName();
         $image->storeAs('public/img/sliders', $imageName);
-
         // Optionally delete the old image file from storage if necessary
         // Storage::delete('public/img/sliders/' . $slider->image);
     }

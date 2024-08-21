@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use MongoDB\Laravel\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use MongoDB\Laravel\Relations\HasMany;
 
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use MongoDB\Laravel\Relations\BelongsToMany;
+use MongoDB\Laravel\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 
 class User extends Authenticatable
@@ -24,6 +26,7 @@ class User extends Authenticatable
         'role',
         'blocked',
         'tel',
+        'image',
         'city',
         'address',
         'zip',
@@ -75,4 +78,15 @@ public function offre()
 {
     return $this->belongsTo(User::class);
 }
+
+public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'user_category');
+    }
+
+ public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
 }
