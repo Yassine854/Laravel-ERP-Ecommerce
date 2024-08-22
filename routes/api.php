@@ -98,17 +98,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::delete('/contacts/delete/{admin_id}/{contact_id}', [ContactsController::class, 'destroy']);
 
 
-       // Category
+    // Category
     Route::get('categories/{user_id}', [CategoryController::class, 'index']);
     Route::post('categories', [CategoryController::class, 'store']);
     Route::put('categories/{id}', [CategoryController::class, 'update']);
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
     // Product routes
-    Route::get('products', [ProductController::class, 'index']);
+    Route::get('products/categories/{category_id}', [ProductController::class, 'index']);
     Route::get('products/{id}', [ProductController::class, 'show']);
     Route::post('products', [ProductController::class, 'store']);
-    Route::put('products/{id}', [ProductController::class, 'update']);
+    Route::post('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
      // Stock routes
