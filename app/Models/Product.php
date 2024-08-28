@@ -31,7 +31,7 @@ class Product extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function commandProducts()
+    public function commandes()
     {
         return $this->hasMany(CommandProduct::class, 'product_id');
     }
