@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
+            $table->string('serial_number')->unique();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity');
-            $table->decimal('total_price', 10, 2);
+            $table->foreignId('admin_id')->constrained('users')->onDelete('cascade');
+            $table->decimal('total_amount', 10, 2);
+            $table->string('status')->default('en attente');
             $table->timestamps();
         });
+
     }
 
     /**
@@ -28,7 +30,6 @@ return new class extends Migration
     {
         Schema::table('commandes', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
-            $table->dropForeign(['product_id']);
         });
 
         Schema::dropIfExists('commandes');

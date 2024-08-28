@@ -16,6 +16,12 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
+    public function AdminProducts($admin_id)
+    {
+        $products = Product::with('category', 'user')->where('user_id', $admin_id)->get();
+        return response()->json($products);
+    }
+
     // Show a single product
     public function show($id)
     {

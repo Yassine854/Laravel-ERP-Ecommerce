@@ -11,6 +11,7 @@ use App\Http\Controllers\OffresController;
 use App\Http\Controllers\SliderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ParametresController;
@@ -42,7 +43,7 @@ Route::post('/CreateAdmin', [AuthController::class, 'CreateAdmin']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-
+    Route::get('/user', [AuthController::class, 'user']);
 
     // Route::middleware('throttle:60,1')->group(function () {
     //     Route::get('/roles', [RoleController::class, 'index']);
@@ -60,7 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/admins/unblock/{id}', [AuthController::class, 'unblock']);
 
     //Clients
-    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/clients', [AuthController::class, 'clients']);
+    Route::post('/CreateClient', [AuthController::class, 'CreateClient']);
+    Route::put('/clients/update/{id}', [AuthController::class, 'updateClient']);
+    Route::delete('/clients/delete/{id}', [AuthController::class, 'deleteClient']);
 
     //Slider
     Route::get('/sliders/{admin_id}', [SliderController::class, 'index']);
@@ -105,18 +109,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
     // Product routes
+    Route::get('AdminProducts/{admin_id}', [ProductController::class, 'AdminProducts']);
     Route::get('products/categories/{category_id}', [ProductController::class, 'index']);
     Route::get('products/{id}', [ProductController::class, 'show']);
     Route::post('products', [ProductController::class, 'store']);
     Route::post('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
+
+    // Commandes
+    Route::get('commandes/{user_id}', [CommandeController::class, 'index']);
+    Route::post('commandes', [CommandeController::class, 'store']);
+    Route::put('commandes/{id}', [CommandeController::class, 'update']);
+    Route::delete('commandes/{id}', [CommandeController::class, 'destroy']);
+    Route::get('ShowCommande/{id}', [CommandeController::class, 'show']);
+
+
+
+
+
+
      // Stock routes
-     Route::get('stocks', [StockController::class, 'index']);
-     Route::get('stocks/{id}', [StockController::class, 'show']);
-     Route::post('stocks', [StockController::class, 'store']);
-     Route::put('stocks/{id}', [StockController::class, 'update']);
-     Route::delete('stocks/{id}', [StockController::class, 'destroy']);
+    //  Route::get('stocks', [StockController::class, 'index']);
+    //  Route::get('stocks/{id}', [StockController::class, 'show']);
+    //  Route::post('stocks', [StockController::class, 'store']);
+    //  Route::put('stocks/{id}', [StockController::class, 'update']);
+    //  Route::delete('stocks/{id}', [StockController::class, 'destroy']);
+
+
 
     // Route::get('/clients', [AuthController::class, 'clients']);
 });

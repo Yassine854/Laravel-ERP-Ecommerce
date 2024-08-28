@@ -83,6 +83,71 @@ public function CreateAdmin(Request $request)
 
 
 
+public function CreateClient(Request $request)
+{
+    // Validation rules
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email|max:255',
+        'tel' => 'required|numeric|digits:8|unique:users,tel',
+        'city' => 'required|string|max:255',
+        'address' => 'required|string|max:255',
+        'zip' => 'required|numeric|digits:4',
+        'password' => 'required|string|min:8',
+    ], [
+        // French validation messages
+        'name.required' => 'Le nom est requis.',
+        'email.required' => "L'adresse e-mail est requise.",
+        'email.email' => "L'adresse e-mail doit être valide.",
+        'email.unique' => "L'adresse e-mail est déjà utilisée.",
+        'tel.required' => 'Le numéro de téléphone est requis.',
+        'tel.numeric' => 'Le numéro de téléphone doit être un nombre.',
+        'tel.digits' => 'Le numéro de téléphone doit comporter exactement 8 chiffres.',
+        'tel.unique' => 'Le numéro de téléphone est déjà utilisé.',
+        'city.required' => 'La ville est requise.',
+        'address.required' => "L'adresse est requise.",
+        'zip.required' => 'Le code postal est requis.',
+        'zip.numeric' => 'Le code postal doit être un nombre.',
+        'zip.digits' => 'Le code postal doit comporter exactement 4 chiffres.',
+        'password.required' => 'Le mot de passe est requis.',
+        'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+    ]);
+
+    // If validation fails
+    if ($validator->fails()) {
+        return response()->json([
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    // Create user
+    $user = User::create([
+        'name' => $request->input('name'),
+        'email' => $request->input('email'),
+        'tel' => $request->input('tel'),
+        'city' => $request->input('city'),
+        'address' => $request->input('address'),
+        'zip' => $request->input('zip'),
+        'blocked' => false,
+        'role' => "2",
+        'password' => Hash::make($request->input('password')),
+    ]);
+
+    $subdomain = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $request->input('name'))) . $user->id;
+    $user->subdomain = $subdomain;
+    $user->save();
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+        $cookie = cookie('token', $token, 60 * 24, '/', env('SESSION_DOMAIN', '.example.shop'), true, true, false, 'None');
+
+    return response()->json([
+        'user' => new UserResource($user),
+    ])->withCookie($cookie);
+}
+
+
+
 
     public function register(RegisterRequest $request)
     {
@@ -158,16 +223,19 @@ public function CreateAdmin(Request $request)
         return response()->json([
             'admins' => $admins
         ]);
-    }
 
+    }
 
     public function clients()
     {
         $clients = User::where('role', "2")->get();
+
         return response()->json([
             'clients' => $clients
         ]);
+
     }
+
 
     public function updateAdmin(Request $request, $id)
 {
@@ -230,6 +298,67 @@ public function CreateAdmin(Request $request)
 }
 
 
+public function updateClient(Request $request, $id)
+{
+    // Validate request data
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => [
+            'required',
+            'email',
+            'max:255',
+            Rule::unique('users')->ignore($id, '_id'),
+        ],
+        'tel' => ['nullable', 'integer', 'digits:8'],
+        'city' => 'nullable|string|max:255',
+        'address' => 'nullable|string|max:255',
+        'password' => 'nullable|string|min:6|confirmed',
+        'zip' => 'nullable|string|min:4|max:4',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,bmp,gif,svg|max:2048',
+    ]);
+
+    // Find the admin user by ID
+    $client = User::findOrFail($id);
+
+    // Update user attributes
+    $client->name = $data['name'];
+    $client->tel = $data['tel'];
+    $client->city = $data['city'];
+    $client->address = $data['address'];
+    $client->zip = $data['zip'];
+
+    // Update email if provided
+    if (!empty($data['email'])) {
+        $client->email = $data['email'];
+    }
+
+    // Handle image upload
+    if ($request->hasFile('image')) {
+        // Delete the old image if it exists and a new image is being uploaded
+        if ($client->image && Storage::exists('public/img/profile/' . $client->image)) {
+            Storage::delete('public/img/profile/' . $client->image);
+        }
+
+        // Store the new image
+        $image = $request->file('image');
+        $imageName = time() . '_' . $image->getClientOriginalName();
+        $image->storeAs('public/img/profile', $imageName);
+        $client->image = $imageName;
+    }
+
+    // Update password if provided
+    if (!empty($data['password'])) {
+        $client->password = Hash::make($data['password']);
+    }
+
+    // Save the updated user record
+    $client->update();
+
+    // Return the updated user as JSON response
+    return response()->json($client);
+}
+
+
 
     public function block($id)
     {
@@ -284,7 +413,13 @@ public function CreateAdmin(Request $request)
         ]);
     }
 
+    public function deleteClient($id)
+    {
+        $client = User::findOrFail($id);
+        $client->delete();
 
+        return response()->json(['message' => 'client deleted successfully.']);
+    }
 
     // public function CreateClient(Request $request)
     // {
