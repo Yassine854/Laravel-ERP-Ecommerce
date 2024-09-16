@@ -32,7 +32,6 @@ return new class extends Migration
             $table->foreign('offre_id')->references('id')->on('offres')->onDelete('cascade');
             $table->unsignedBigInteger('parametre_id');
             $table->foreign('parametre_id')->references('id')->on('parametres')->onDelete('cascade');
-
             $table->rememberToken();
             $table->timestamps();
         });

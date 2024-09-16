@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+
 use Laravel\Sanctum\HasApiTokens;
 use MongoDB\Laravel\Relations\HasMany;
 
@@ -60,33 +61,36 @@ class User extends Authenticatable
 
 
     public function sliders()
-{
-    return $this->hasMany(Slider::class);
-}
+    {
+        return $this->hasMany(Slider::class);
+    }
 
-public function parametre()
-{
-    return $this->belongsTo(User::class);
-}
+    public function parametre()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function pack()
-{
-    return $this->belongsTo(User::class);
-}
+    public function pack()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function offre()
-{
-    return $this->belongsTo(User::class);
-}
+    public function offre()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function categories(): BelongsToMany
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'user_category');
     }
 
- public function products(): HasMany
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }
-
+    public function facture()
+    {
+        return $this->hasMany(Facture::class);
+    }
 }
