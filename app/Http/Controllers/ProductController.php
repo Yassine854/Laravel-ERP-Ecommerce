@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Models\ProductAttributeValue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,23 +17,92 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    public function AdminProducts($admin_id)
+    public function AdminProducts($admin_id,$category_id)
     {
-        $products = Product::with('category', 'user')->where('user_id', $admin_id)->get();
+        $products = Product::with('category','attributes','user')->where('user_id', $admin_id)->where('category_id', $category_id)->get();
+        return response()->json($products);
+    }
+
+    public function AllAdminProducts($admin_id)
+    {
+        $products = Product::with('user')->where('user_id', $admin_id)->get();
         return response()->json($products);
     }
 
     // Show a single product
-    public function show($id)
-    {
-        $product = Product::with('category', 'user')->findOrFail($id);
-        return response()->json($product);
-    }
+    public function show($product_id)
+{
+    $product = Product::with('category', 'attributes','attributes.attribute','attributes.value' ,'user')->findOrFail($product_id);
+    return response()->json($product);
+}
+
 
     // Create a new product
     public function store(Request $request)
+    {
+
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'stock' => 'required|integer',
+            'brand' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id' => 'required|exists:categories,_id',
+            'user_id' => 'required|exists:users,_id',
+            'attributes' => 'required|array', // Validate attributes array
+            'attributes.*.attribute_id' => 'required|exists:attributes,_id', // Ensure each attribute exists
+            'attributes.*.value_id' => 'required|exists:values,_id', // Ensure each value exists
+            'attributes.*.stock' => 'required|integer', // Stock per attribute
+            'attributes.*.unit_price' => 'required|numeric', // Price per attribute
+        ]);
+        $attributes=$validated['attributes'];
+        // Handle the image upload if provided
+        $imageName = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $image->getClientOriginalName();
+            $image->storeAs('public/img/products', $imageName);
+        }
+
+        // Create the product
+        $product = new Product([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'brand' => $validated['brand'],
+            'image' => $imageName,
+            'category_id' => $validated['category_id'],
+            'user_id' => $validated['user_id'],
+        ]);
+
+        $product->save();
+
+        foreach ($attributes as $attribute) {
+            ProductAttributeValue::create([
+                'product_id' => $product->id, // Use the ID of the newly created product
+                'attribute_id' => $attribute['attribute_id'],
+                'value_id' => $attribute['value_id'],
+                'stock' => $attribute['stock'],
+                'unit_price' => $attribute['unit_price'],
+            ]);
+        }
+
+
+
+        // Return the created product with its attributes
+        return response()->json($product, 201);
+    }
+
+
+
+    // Update an existing product
+    public function update(Request $request, $product_id)
 {
-    $validator = Validator::make($request->all(), [
+    // Validate the request
+    $validated = $request->validate([
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'price' => 'required|numeric',
@@ -41,91 +111,61 @@ class ProductController extends Controller
         'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'category_id' => 'required|exists:categories,_id',
         'user_id' => 'required|exists:users,_id',
+        'attributes' => 'required|array', // Validate attributes array
+        'attributes.*.attribute_id' => 'required|exists:attributes,_id', // Ensure each attribute exists
+        'attributes.*.value_id' => 'required|exists:values,_id', // Ensure each value exists
+        'attributes.*.stock' => 'required|integer', // Stock per attribute
+        'attributes.*.unit_price' => 'required|numeric', // Price per attribute
     ]);
 
-    if ($validator->fails()) {
-        return response()->json($validator->errors(), 422);
-    }
+    // Find the existing product
+    $product = Product::findOrFail($product_id);
 
-    $imageName=null;
+    // Handle the image upload if provided
     if ($request->hasFile('image')) {
+        // Delete the old image if it exists
+        if ($product->image) {
+            Storage::delete('public/img/products/' . $product->image);
+        }
+
+        // Store the new image
         $image = $request->file('image');
         $imageName = time() . '_' . $image->getClientOriginalName();
         $image->storeAs('public/img/products', $imageName);
+    } else {
+        // Keep the old image name if no new image is uploaded
+        $imageName = $product->image;
     }
 
-
-    $product = new Product([
-        'name' => $request->name,
-        'description' => $request->description,
-        'price' => $request->price,
-        'stock' => $request->stock,
-        'brand' => $request->brand,
+    // Update the product details
+    $product->update([
+        'name' => $validated['name'],
+        'description' => $validated['description'],
+        'price' => $validated['price'],
+        'stock' => $validated['stock'],
+        'brand' => $validated['brand'],
         'image' => $imageName,
-        'category_id' => $request->category_id,
-        'user_id' => $request->user_id,
+        'category_id' => $validated['category_id'],
+        'user_id' => $validated['user_id'],
     ]);
 
-    $product->save();
-    return response()->json($product, 201);
+    // Update or create attributes
+    ProductAttributeValue::where('product_id', $product->id)->delete(); // Remove old attributes
+
+    foreach ($validated['attributes'] as $attribute) {
+        ProductAttributeValue::create([
+            'product_id' => $product->id,
+            'attribute_id' => $attribute['attribute_id'],
+            'value_id' => $attribute['value_id'],
+            'stock' => $attribute['stock'],
+            'unit_price' => $attribute['unit_price'],
+        ]);
+    }
+
+    // Return the updated product with its attributes
+    return response()->json($product, 200);
 }
 
-
-    // Update an existing product
-    public function update(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'sometimes|numeric',
-            'image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
-            'category_id' => 'sometimes|exists:categories,_id',
-            'brand' => 'nullable|string|max:255',
-            'stock' => 'required|integer',
-            'user_id' => 'sometimes|exists:users,_id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        if ($request->hasFile('image')) {
-            if ($product->image && Storage::exists('public/img/products/' . $product->image)) {
-                Storage::delete('public/img/products/' . $product->image);
-            }
-            $image = $request->file('image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $image->storeAs('public/img/products', $imageName);
-            $product->image=$imageName;
-        }
-
-        if ($request->has('name')) {
-            $product->name = $request->name;
-        }
-        if ($request->has('description')) {
-            $product->description = $request->description;
-        }
-        if ($request->has('price')) {
-            $product->price = $request->price;
-        }
-        if ($request->has('stock')) {
-            $product->stock = $request->stock;
-        }
-        if ($request->has('brand')) {
-            $product->brand = $request->brand;
-        }
-        if ($request->has('category_id')) {
-            $product->category_id = $request->category_id;
-        }
-        if ($request->has('user_id')) {
-            $product->user_id = $request->user_id;
-        }
-
-        $product->save();
-        return response()->json($product);
-    }
 
     // Delete a product
     public function destroy($id)

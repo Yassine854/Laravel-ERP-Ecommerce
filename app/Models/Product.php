@@ -24,7 +24,7 @@ class Product extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class,'category_id');
     }
     public function user(): BelongsTo
     {
@@ -34,6 +34,12 @@ class Product extends Model
     public function commandes()
     {
         return $this->hasMany(CommandProduct::class, 'product_id');
+    }
+
+
+    public function attributes()
+    {
+        return $this->hasMany(ProductAttributeValue::class, 'product_id');
     }
 
 }

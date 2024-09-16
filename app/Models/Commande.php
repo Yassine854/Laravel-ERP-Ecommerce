@@ -54,4 +54,5 @@ class Commande extends Model
     {
         return $this->hasMany(CommandProduct::class, 'commande_id');
     }
+
 }

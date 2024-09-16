@@ -14,7 +14,8 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
-        'user_id'
+        'user_id',
+        'nature_id'
     ];
 
     public function user(): BelongsTo
@@ -25,5 +26,10 @@ class Category extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function nature(): BelongsTo
+    {
+        return $this->belongsTo(Nature::class,'nature_id');
     }
 }

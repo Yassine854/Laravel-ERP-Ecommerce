@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttributeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -13,8 +14,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\ContactsController;
+use App\Http\Controllers\NatureController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ParametresController;
+use App\Http\Controllers\ValueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,15 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
-    // Route::middleware('throttle:60,1')->group(function () {
-    //     Route::get('/roles', [RoleController::class, 'index']);
-    //     Route::post('/roles/create', [RoleController::class, 'create']);
-    //     Route::put('/roles/update/{id}', [RoleController::class, 'update']);
-    //     Route::delete('/roles/delete/{id}', [RoleController::class, 'destroy']);
-    // });
 
     //Admins
     Route::get('/admins', [AuthController::class, 'admins']);
+    Route::post('/admins/create', [AuthController::class, 'NewAdmin']);
     Route::post('/admins/update/{id}', [AuthController::class, 'updateAdmin']);
     Route::put('/admins/updatePassword/{id}', [AuthController::class, 'updatePassword']);
 
@@ -73,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/sliders/delete/{slider_id}', [SliderController::class, 'destroy']);
 
     //Offre
-    Route::get('/offres', [OffreController::class, 'index']);
+    Route::get('/offres/{pack_id}', [OffreController::class, 'index']);
     Route::post('/offres/create', [OffreController::class, 'create']);
     Route::put('/offres/update/{id}', [OffreController::class, 'update']);
     Route::delete('/offres/destroy/{id}', [OffreController::class, 'destroy']);
@@ -101,17 +99,36 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::put('/contacts/update/{admin_id}/{contact_id}', [ContactsController::class, 'update']);
     // Route::delete('/contacts/delete/{admin_id}/{contact_id}', [ContactsController::class, 'destroy']);
 
+    // Nature
+    Route::get('natures', [NatureController::class, 'index']);
+    Route::post('natures', [NatureController::class, 'store']);
+    Route::put('natures/{id}', [NatureController::class, 'update']);
+    Route::delete('natures/{id}', [NatureController::class, 'destroy']);
+
 
     // Category
-    Route::get('categories/{user_id}', [CategoryController::class, 'index']);
-    Route::post('categories', [CategoryController::class, 'store']);
+    Route::get('categories/{nature_id}', [CategoryController::class, 'index']);
+    Route::post('categories/{nature_id}', [CategoryController::class, 'store']);
     Route::put('categories/{id}', [CategoryController::class, 'update']);
     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
+    //Attributes
+    Route::get('attributes', [AttributeController::class, 'index']);
+    Route::post('attributes', [AttributeController::class, 'store']);
+    Route::put('attributes/{id}', [AttributeController::class, 'update']);
+    Route::delete('attributes/{id}', [AttributeController::class, 'destroy']);
+
+    //Values
+    Route::get('values/{attribute_id}', [ValueController::class, 'index']);
+    Route::post('values/{attribute_id}', [ValueController::class, 'store']);
+    Route::put('values/{id}', [ValueController::class, 'update']);
+    Route::delete('values/{id}', [ValueController::class, 'destroy']);
+
     // Product routes
-    Route::get('AdminProducts/{admin_id}', [ProductController::class, 'AdminProducts']);
     Route::get('products/categories/{category_id}', [ProductController::class, 'index']);
-    Route::get('products/{id}', [ProductController::class, 'show']);
+    Route::get('products/{admin_id}/{category_id}', [ProductController::class, 'AdminProducts']);
+    Route::get('products/{admin_id}', [ProductController::class, 'AllAdminProducts']);
+    Route::get('ShowProduct/{product_id}', [ProductController::class, 'show']);
     Route::post('products', [ProductController::class, 'store']);
     Route::post('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
@@ -123,9 +140,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('commandes/{id}', [CommandeController::class, 'update']);
     Route::delete('commandes/{id}', [CommandeController::class, 'destroy']);
     Route::get('ShowCommande/{id}', [CommandeController::class, 'show']);
-
-
-
 
 
 
@@ -143,8 +157,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 
-Route::domain('{subdomain}.example.shop')->group(function () {
-    Route::middleware(['auth:sanctum', 'subdomain'])->group(function () {
-        Route::get('/clients', [AuthController::class, 'clients']);
-    });
-});
+// Route::domain('{subdomain}.example.shop')->group(function () {
+//     Route::middleware(['auth:sanctum', 'subdomain'])->group(function () {
+//         Route::get('/clients', [AuthController::class, 'clients']);
+//     });
+// });

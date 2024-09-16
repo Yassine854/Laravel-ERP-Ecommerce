@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('title')->nullable();
+            $table->foreign('nature_id')->references('id')->on('natures')->onDelete('cascade');
+            $table->unsignedBigInteger('nature_id');
             $table->string('description')->nullable();
             $table->string('key_word')->nullable();
             $table->string('temps_travail')->nullable();

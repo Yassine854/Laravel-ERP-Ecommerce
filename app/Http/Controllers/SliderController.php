@@ -31,6 +31,7 @@ class SliderController extends Controller
         $request->validate([
             'title' => 'string|max:255',
             'description' => 'string|max:255',
+            'image' => 'required|image'
         ]);
 
         // return response()->json($request->image);

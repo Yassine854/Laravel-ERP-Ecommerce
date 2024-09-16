@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Parametre extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'title',
+        'nature_id',
         'description',
         'key_word',
         'temps_travail',
@@ -25,5 +26,10 @@ class Parametre extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function nature(): BelongsTo
+    {
+        return $this->belongsTo(Nature::class,'nature_id');
     }
 }

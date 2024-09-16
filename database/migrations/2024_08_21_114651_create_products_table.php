@@ -19,7 +19,8 @@ return new class extends Migration
             $table->integer('stock');
             $table->string('brand')->nullable();
             $table->string('image')->nullable();
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->unsignedBigInteger('category_id');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });

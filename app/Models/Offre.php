@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class offre extends Model
 {
@@ -12,5 +13,12 @@ class offre extends Model
         'title',
         'description',
         'prix',
+        'pack_id'
     ];
+
+
+    public function pack(): BelongsTo
+    {
+        return $this->belongsTo(Pack::class,'pack_id');
+    }
 }

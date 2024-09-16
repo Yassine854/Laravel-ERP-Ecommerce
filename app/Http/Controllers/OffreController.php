@@ -9,9 +9,9 @@ use MongoDB\Laravel\Auth\User;
 class OffreController extends Controller
 {
 
-    public function index()
+    public function index($pack_id)
     {
-        $offres = Offre::all();
+        $offres = Offre::with('pack')->where('pack_id',$pack_id)->get();
         return response()->json($offres);
     }
 
@@ -27,6 +27,7 @@ class OffreController extends Controller
             'title' => $request->input('title'),
             'description' => $request->input('description'),
             'prix' => $request->input('prix'),
+            'pack_id' => $request->input('pack_id'),
         ]);
 
         return response()->json($offre, 201);

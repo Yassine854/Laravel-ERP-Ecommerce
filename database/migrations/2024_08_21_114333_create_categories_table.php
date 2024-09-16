@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
+            $table->boolean('cacher')->default(false);
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-
+            $table->foreign('nature_id')->references('id')->on('natures')->onDelete('cascade');
+            $table->unsignedBigInteger('nature_id');
             $table->timestamps();
         });
     }

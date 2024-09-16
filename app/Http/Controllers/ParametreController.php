@@ -14,7 +14,7 @@ class ParametreController extends Controller
      */
     public function index($admin_id)
     {
-        $parametres = Parametre::where('user_id', $admin_id)->get();
+        $parametres = Parametre::with('nature')->where('user_id', $admin_id)->get();
 
         $admin = User::where('_id', $admin_id)->first();
 
@@ -31,7 +31,7 @@ class ParametreController extends Controller
     {
 
         $request->validate([
-            'title' => 'nullable',
+            'nature_id' => 'required',
             'description' => 'nullable|string|max:255',
             'key_word' => 'nullable|string|max:255',
             'temps_travail' => 'nullable|string|max:255',
@@ -45,7 +45,7 @@ class ParametreController extends Controller
         ]);
 
         $parametre = Parametre::create([
-            'title' => $request->input('title'),
+            'nature_id' => $request->input('nature_id'),
             'description' => $request->input('description'),
             'key_word' => $request->input('key_word'),
             'temps_travail' => $request->input('temps_travail'),
@@ -70,7 +70,7 @@ class ParametreController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-           'title' => 'nullable',
+            'nature_id' => 'required',
             'description' => 'nullable|string|max:255',
             'key_word' => 'nullable|string|max:255',
             'temps_travail' => 'nullable|string|max:255',
@@ -84,7 +84,7 @@ class ParametreController extends Controller
         ]);
 
         $parametre = Parametre::findOrFail($id);
-        $parametre->title = $request->input('title');
+        $parametre->nature_id = $request->input('nature_id');
         $parametre->description = $request->input('description');
         $parametre->key_word = $request->input('key_word');
         $parametre->temps_travail = $request->input('temps_travail');
@@ -112,7 +112,7 @@ class ParametreController extends Controller
 
     public function show($admin_id)
 {
-    $parametre = Parametre::where('user_id', $admin_id)->first();
+    $parametre = Parametre::with('nature')->where('user_id', $admin_id)->first();
 
     return response()->json([
         'parametre' => $parametre,
