@@ -135,6 +135,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Commandes
+    Route::get('ProductAttributes/{product_id}', [CommandeController::class, 'getAttributesWithValuesForProduct']);
+
     Route::get('commandes/{user_id}', [CommandeController::class, 'index']);
     Route::post('commandes', [CommandeController::class, 'store']);
     Route::put('commandes/{id}', [CommandeController::class, 'update']);

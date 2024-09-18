@@ -10,6 +10,7 @@ use App\Models\CommandProduct;
 use App\Models\CommandeProduct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\ProductAttributeValue;
 
 class CommandeController extends Controller
 {
@@ -21,6 +22,19 @@ class CommandeController extends Controller
         $commandes = Commande::with('admin','user','products')->where('admin_id',$id)->get();
         return response()->json($commandes);
     }
+
+
+    public function getAttributesWithValuesForProduct($productId)
+    {
+        // Fetch attributes and their values for the given product ID
+        $attributesWithValues = ProductAttributeValue::where('product_id', $productId)
+            ->with('attribute', 'value') // Ensure relationships are loaded
+            ->get(); // Added semicolon here
+
+        // Return the attributes with values as JSON response
+        return response()->json($attributesWithValues);
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -42,12 +56,13 @@ class CommandeController extends Controller
             'total_amount' => 'required|numeric',
             'products' => 'required|array',
             'products.*._id' => 'required|exists:products,_id',
-            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.attributes' => 'required',
+            'products.*.attributes.*.attributes' => 'required',
+            'products.*.attributes.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Start a transaction to ensure data integrity
 
-        try {
             // Create the Commande
             $commande = Commande::create([
                 'admin_id' =>$request->admin_id,
@@ -57,26 +72,26 @@ class CommandeController extends Controller
             ]);
 
             $products = $validated['products'];
-        foreach ($products as $product) {
-            $p = Product::findOrFail($product['_id']);
-            CommandProduct::create([
-                'commande_id' => $commande->id,
-                'product_id' => $product['_id'],
-                'quantity' => $product['quantity'],
-                'price' => $p->price,
-            ]);
-            $p->stock-=$product['quantity'];
-            $p->save();
-        }
-
-            // Commit the transaction
-
+            foreach ($products as $product) {
+                $p = Product::findOrFail($product['_id']);
+                foreach ($product['attributes'] as $attributeGroup) {
+                    foreach ($attributeGroup['attributes'] as $attribute) {
+                        // Create CommandProduct entries for each product with its attributes
+                        CommandProduct::create([
+                            'commande_id' => $commande->id,
+                            'product_id' => $product['_id'],
+                            'price' => $p->price,
+                            'quantity'=>$attributeGroup['quantity'],
+                            'attribute_id' => $attribute['attribute_id'],
+                            'value_id' => $attribute['value_id'],
+                        ]);
+                    }
+                }
+                // Update product stock
+                $p->save();
+            }
             return response()->json(['message' => 'Commande created successfully!', 'commande' => $commande], 201);
-        } catch (\Exception $e) {
-            // Rollback the transaction if something goes wrong
 
-            return response()->json(['error' => 'Failed to create Commande', 'message' => $e->getMessage()], 500);
-        }
     }
 
 
@@ -161,6 +176,8 @@ class CommandeController extends Controller
             CommandProduct::create([
                 'commande_id' => $commande->id,
                 'product_id' => $product['_id'],
+                'attribute_id'=>$product['attribute_id'],
+                'value_id'=>$product['value_id'],
                 'quantity' => $product['quantity'],
                 'price' => $p->price,
             ]);

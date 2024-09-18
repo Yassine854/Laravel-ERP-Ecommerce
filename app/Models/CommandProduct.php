@@ -7,7 +7,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class CommandProduct extends Model
 {
     protected $table = 'command_product';
-    protected $fillable = ['commande_id', 'product_id', 'quantity', 'price'];
+    protected $fillable = ['commande_id', 'product_id','attribute_id', 'value_id','quantity', 'price'];
 
     /**
      * Get the command associated with the pivot.

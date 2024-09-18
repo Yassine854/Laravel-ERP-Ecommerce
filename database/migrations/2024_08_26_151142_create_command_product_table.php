@@ -13,11 +13,17 @@ return new class extends Migration
     {
         Schema::create('command_product', function (Blueprint $table) {
             $table->id();
-            $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade');
             $table->unsignedBigInteger('commande_id');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade');
             $table->unsignedBigInteger('product_id');
-            $table->integer('quantity')->default(1); // Optional: If you need to track quantity
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+
+            $table->unsignedBigInteger('attribute_id');
+            $table->foreign('attribute_id')->references('attribute_id')->on('attributes')->onDelete('cascade');
+
+            $table->unsignedBigInteger('value_id');
+            $table->foreign('value_id')->references('value_id')->on('values')->onDelete('cascade');
+            $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2);
             $table->timestamps();
         });
