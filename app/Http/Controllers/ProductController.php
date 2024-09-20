@@ -173,6 +173,9 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         if ($product->image!=null)
             Storage::delete('public/img/products/' . $product->image);
+
+            ProductAttributeValue::where('product_id', $product->id)->delete();
+
         $product->delete();
         return response()->json(null, 204);
     }
