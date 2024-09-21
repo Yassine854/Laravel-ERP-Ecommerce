@@ -26,44 +26,87 @@ class CategoryController extends Controller
     }
 
     private function normalizeName($string)
-    {
-        // Normalize to NFD form
-        $normalized = Normalizer::normalize($string, Normalizer::FORM_D);
-        // Remove accents and diacritical marks
-        $normalized = preg_replace('/[\p{Mn}]/u', '', $normalized);
-        // Convert to lowercase
-        $normalized = strtolower($normalized);
-        // Remove redundant spaces and trim
-        $normalized = preg_replace('/\s+/', ' ', $normalized);
-        $normalized = trim($normalized);
-        // Reduce repeated letters to a single letter
-        $normalized = $this->reduceRepeatedLetters($normalized);
-        return $normalized;
+{
+    // Normaliser en forme NFD (décompose les caractères accentués)
+    $normalized = Normalizer::normalize($string, Normalizer::FORM_D);
+
+    // Supprimer les accents et les marques diacritiques
+    $normalized = preg_replace('/[\p{Mn}]/u', '', $normalized);
+
+    // Convertir la chaîne en minuscules pour l'insensibilité à la casse
+    $normalized = strtolower($normalized);
+
+    // Supprimer les espaces redondants et supprimer les espaces superflus
+    $normalized = preg_replace('/\s+/', ' ', $normalized);
+    $normalized = trim($normalized);
+
+    // Réduire les lettres répétées à une seule lettre
+    $normalized = $this->reduceRepeatedLetters($normalized);
+
+    // S'assurer que la chaîne ne commence ni ne se termine par un espace
+    $normalized = preg_replace('/^\s+|\s+$/', '', $normalized);
+
+    // Supprimer les caractères spéciaux sauf les tirets et les espaces
+    $normalized = preg_replace('/[^a-z0-9\- ]/', '', $normalized);
+
+    // Limiter la longueur pour éviter les noms excessivement longs
+    if (strlen($normalized) > 255) {
+        $normalized = substr($normalized, 0, 255);
     }
 
-    // Function to reduce repeated letters to a single letter
-    private function reduceRepeatedLetters($string)
-    {
-        return preg_replace('/(\w)\1+/', '$1', $string);
-    }
+    // Empêcher les tirets en début ou en fin
+    $normalized = preg_replace('/^-+|-+$/', '', $normalized);
+
+    // Empêcher les tirets multiples consécutifs
+    $normalized = preg_replace('/-{2,}/', '-', $normalized);
+
+    return $normalized;
+}
+
+
+// Function to reduce repeated letters to a single letter
+private function reduceRepeatedLetters($string)
+{
+    return preg_replace('/(\w)\1+/', '$1', $string);
+}
+
 
 
     // Create a new category
     public function store(Request $request,$nature_id)
     {
         $name = $request->input('name');
+
+        // Normalize the name before any operation
         $normalizedName = $this->normalizeName($name);
 
+        // Remove the trailing 's' for uniqueness check
+        $normalizedNameWithoutS = rtrim($normalizedName, 's');
+        $normalizedNameWithS = $normalizedName . 's';
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+
             'description' => 'nullable|string|max:255',
             'user_id' => 'required|exists:users,_id',
-            function ($attribute, $value, $fail) use ($normalizedName) {
-                $exists = Category::where('name',$normalizedName)->exists();
+            'name' => [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[a-zA-ZÀ-ÿ\s\-]+$/u', // Allow letters, accented letters, spaces, and hyphens
+
+            function ($attribute, $value, $fail) use ($normalizedNameWithoutS,$normalizedName,$normalizedNameWithS) {
+                // Check if a record with the normalized name or its variant (without 's') already exists
+                $exists = Category::where(function ($query) use ($normalizedName, $normalizedNameWithoutS,$normalizedNameWithS) {
+                    $query->where('name', $normalizedName)
+                          ->orWhere('name', $normalizedNameWithoutS)
+                          ->orWhere('name', $normalizedNameWithS);
+                })->exists();
+
                 if ($exists) {
                     $fail('Le nom existe déjà.');
                 }
             },
+        ],
         ]);
 
         if ($validator->fails()) {
@@ -71,7 +114,7 @@ class CategoryController extends Controller
         }
 
         $category = new Category([
-            'name' => $request->name,
+            'name' => strtolower($normalizedName),
             'description' => $request->description,
             'user_id' => $request->user_id,
             'nature_id'=>$nature_id
@@ -84,12 +127,39 @@ class CategoryController extends Controller
     // Update an existing category
     public function update(Request $request, $id)
     {
+        $name = $request->input('name');
+
+        // Normalize the name before any operation
+        $normalizedName = $this->normalizeName($name);
+
+        // Remove the trailing 's' for uniqueness check
+        $normalizedNameWithoutS = rtrim($normalizedName, 's');
+        $normalizedNameWithS = $normalizedName . 's';
+
         $category = Category::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string|max:255',
             'user_id' => 'sometimes|exists:users,_id',
+            'name' => [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[a-zA-ZÀ-ÿ\s\-]+$/u', // Allow letters, accented letters, spaces, and hyphens
+
+            function ($attribute, $value, $fail) use ($normalizedNameWithoutS,$normalizedName,$normalizedNameWithS) {
+                // Check if a record with the normalized name or its variant (without 's') already exists
+                $exists = Category::where(function ($query) use ($normalizedName, $normalizedNameWithoutS,$normalizedNameWithS) {
+                    $query->where('name', $normalizedName)
+                          ->orWhere('name', $normalizedNameWithoutS)
+                          ->orWhere('name', $normalizedNameWithS);
+                })->exists();
+
+                if ($exists) {
+                    $fail('Le nom existe déjà.');
+                }
+            },
+        ],
         ]);
 
         if ($validator->fails()) {
@@ -97,7 +167,7 @@ class CategoryController extends Controller
         }
 
         if ($request->has('name')) {
-            $category->name = $request->name;
+            $category->name = strtolower($normalizedName);
         }
         if ($request->has('user_id')) {
             $category->user_id = $request->user_id;
