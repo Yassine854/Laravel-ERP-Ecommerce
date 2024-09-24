@@ -21,4 +21,10 @@ class CommandProduct extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
+
+    public function attributes()
+    {
+        return $this->hasMany(CommandProductAttribute::class, 'commande_product_id');
+    }
+
 }

@@ -3,13 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Facture extends Model
 {
     use HasFactory;
 
-
+    protected $fillable = [
+        'serial_number',
+        'admin_id',
+        'commande_id',
+        'facture_date',
+        'facture_tva',
+        'total_amount',
+        'status',
+    ];
     protected static function booted()
     {
         static::creating(function ($commande) {
@@ -40,7 +48,7 @@ class Facture extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function commande()
+    public function command()
     {
         return $this->belongsTo(Commande::class, 'commande_id');
     }

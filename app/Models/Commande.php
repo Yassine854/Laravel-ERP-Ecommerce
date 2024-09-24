@@ -49,10 +49,11 @@ class Commande extends Model
     }
 
 
-
     public function products()
     {
         return $this->hasMany(CommandProduct::class, 'commande_id');
     }
+
+
 
 }

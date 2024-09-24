@@ -14,6 +14,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\ContactsController;
+use App\Http\Controllers\FactureController;
 use App\Http\Controllers\NatureController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ParametresController;
@@ -143,7 +144,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('commandes/{id}', [CommandeController::class, 'destroy']);
     Route::get('ShowCommande/{id}', [CommandeController::class, 'show']);
 
+    Route::get('NoCommandesInFactures/{admin_id}', [CommandeController::class, 'NoCommandesInFactures']);
 
+
+    //factures
+    Route::get('factures/{admin_id}', [FactureController::class, 'index']);
+    Route::get('PrintFacture/{admin_id}', [FactureController::class, 'show']);
+
+    Route::post('factures', [FactureController::class, 'store']);
+    Route::put('factures/{id}', [FactureController::class, 'update']);
+    Route::delete('factures/{id}', [FactureController::class, 'destroy']);
 
      // Stock routes
     //  Route::get('stocks', [StockController::class, 'index']);

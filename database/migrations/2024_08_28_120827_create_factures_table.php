@@ -14,11 +14,14 @@ return new class extends Migration
         Schema::create('factures', function (Blueprint $table) {
             $table->id();
             $table->string('serial_number')->unique();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('admin_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('commande_id')->constrained('commandes');
+
+            $table->unsignedBigInteger('admin_id');
+            $table->foreign('admin_id')->references('admin_id')->on('users')->onDelete('cascade');
+
+            $table->unsignedBigInteger('commande_id');
+            $table->foreign('commande_id')->references('commande_id')->on('commandes')->onDelete('cascade');
+
             $table->date('facture_date');
-            $table->string('facture_annee',300);
             $table->float('facture_tva');
             $table->decimal('total_amount', 10, 2);
             $table->string('status')->default(null);
