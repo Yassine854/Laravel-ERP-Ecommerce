@@ -31,7 +31,10 @@ class ParametreController extends Controller
     {
 
         $request->validate([
+            'name' => 'required|string|max:255',
             'nature_id' => 'required',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:8|unique:users,tel',
             'description' => 'nullable|string|max:255',
             'key_word' => 'nullable|string|max:255',
             'temps_travail' => 'nullable|string|max:255',
@@ -45,6 +48,9 @@ class ParametreController extends Controller
         ]);
 
         $parametre = Parametre::create([
+            'name' => $request->input('name'),
+            'address' => $request->input('address'),
+            'phone' => $request->input('phone'),
             'nature_id' => $request->input('nature_id'),
             'description' => $request->input('description'),
             'key_word' => $request->input('key_word'),
@@ -70,7 +76,10 @@ class ParametreController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
             'nature_id' => 'required',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|numeric|digits:8|unique:users,tel',
             'description' => 'nullable|string|max:255',
             'key_word' => 'nullable|string|max:255',
             'temps_travail' => 'nullable|string|max:255',
@@ -84,7 +93,12 @@ class ParametreController extends Controller
         ]);
 
         $parametre = Parametre::findOrFail($id);
+        $parametre->name = $request->input('name');
+        $parametre->phone = $request->input('phone');
+        $parametre->address = $request->input('address');
         $parametre->nature_id = $request->input('nature_id');
+        $parametre->address = $request->input('address');
+
         $parametre->description = $request->input('description');
         $parametre->key_word = $request->input('key_word');
         $parametre->temps_travail = $request->input('temps_travail');
@@ -111,12 +125,18 @@ class ParametreController extends Controller
     }
 
     public function show($admin_id)
-{
-    $parametre = Parametre::with('nature')->where('user_id', $admin_id)->first();
+    {
+        // Fetch the parameter with its associated nature
+        $parametre = Parametre::with('nature')->where('user_id', $admin_id)->first();
 
-    return response()->json([
-        'parametre' => $parametre,
-    ]);
-}
+        // Check if the parameter exists
+        if (!$parametre) {
+            return response()->json(['message' => 'Parametre not found.'], 404);
+        }
+
+        return response()->json([
+            'parametre' => $parametre,
+        ]);
+    }
 
 }

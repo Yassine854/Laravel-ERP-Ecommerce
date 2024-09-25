@@ -14,7 +14,7 @@ class FactureController extends Controller
      */
     public function index($admin_id)
     {
-        $factures = Facture::where('admin_id', $admin_id)->with('admin', 'user', 'command','command.user','command.products')->get();
+        $factures = Facture::where('admin_id', $admin_id)->with('admin', 'user', 'command','command.user','command.products.product','command.products.attributes.attribute','command.products.attributes.value')->get();
         return response()->json($factures);
     }
 

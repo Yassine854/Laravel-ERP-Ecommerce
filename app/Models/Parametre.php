@@ -10,6 +10,9 @@ class Parametre extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'name',
+        'address',
+        'phone',
         'nature_id',
         'description',
         'key_word',

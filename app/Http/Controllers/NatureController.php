@@ -41,14 +41,14 @@ private function normalizeName($string)
     $normalized = preg_replace('/\s+/', ' ', $normalized);
     $normalized = trim($normalized);
 
-    // Réduire les lettres répétées à une seule lettre
+    // Réduire les lettres répétées à une seule ou deux lettres
     $normalized = $this->reduceRepeatedLetters($normalized);
 
     // S'assurer que la chaîne ne commence ni ne se termine par un espace
     $normalized = preg_replace('/^\s+|\s+$/', '', $normalized);
 
-    // Supprimer les caractères spéciaux sauf les tirets et les espaces
-    $normalized = preg_replace('/[^a-z0-9\- ]/', '', $normalized);
+    // Supprimer les caractères spéciaux sauf les tirets, les espaces et les points
+    $normalized = preg_replace('/[^a-z0-9\-\. ]/', '', $normalized);
 
     // Limiter la longueur pour éviter les noms excessivement longs
     if (strlen($normalized) > 255) {
@@ -64,11 +64,10 @@ private function normalizeName($string)
     return $normalized;
 }
 
-
-// Function to reduce repeated letters to a single letter
 private function reduceRepeatedLetters($string)
 {
-    return preg_replace('/(\w)\1+/', '$1', $string);
+    // Allow up to 2 consecutive letters or digits
+    return preg_replace('/([a-z0-9])\1{2,}/', '$1$1', $string);
 }
 
 
@@ -92,7 +91,7 @@ public function store(Request $request)
             'required',
             'string',
             'max:255',
-            'regex:/^[a-zA-ZÀ-ÿ\s\-]+$/u', // Allow letters, accented letters, spaces, and hyphens
+            'regex:/^[a-zA-Z0-9À-ÿ\s\-\.]+$/u', // Updated regex to allow dots
 
             function ($attribute, $value, $fail) use ($normalizedNameWithoutS,$normalizedName,$normalizedNameWithS) {
                 // Check if a record with the normalized name or its variant (without 's') already exists
@@ -133,7 +132,10 @@ public function store(Request $request)
         $nature = Nature::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[a-zA-Z0-9À-ÿ\s\-\.]+$/u', // Updated regex to allow dots
         ]);
 
         if ($validator->fails()) {
