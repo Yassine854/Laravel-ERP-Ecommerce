@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AttributeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -8,17 +7,19 @@ use App\Http\Controllers\PackController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\OffreController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\ValueController;
+use App\Http\Controllers\NatureController;
 use App\Http\Controllers\OffresController;
 use App\Http\Controllers\SliderController;
+use App\Http\Controllers\FactureController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\ContactsController;
-use App\Http\Controllers\FactureController;
-use App\Http\Controllers\NatureController;
+use App\Http\Controllers\AttributeController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ParametresController;
-use App\Http\Controllers\ValueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -162,6 +163,12 @@ Route::middleware('auth:sanctum')->group(function () {
     //  Route::put('stocks/{id}', [StockController::class, 'update']);
     //  Route::delete('stocks/{id}', [StockController::class, 'destroy']);
 
+    //Dashboard
+    Route::get('NbCommandes/{admin_id}', [DashboardController::class, 'NbCommandes']);
+    Route::get('NbClients/{admin_id}', [DashboardController::class, 'NbClients']);
+    Route::get('NbFactures/{admin_id}', [DashboardController::class, 'NbFactures']);
+    Route::get('RecentCommandes/{admin_id}', [DashboardController::class, 'RecentCommandes']);
+    Route::get('getUsersByCity/{admin_id}', [DashboardController::class, 'getUsersByCity']);
 
 
     // Route::get('/clients', [AuthController::class, 'clients']);

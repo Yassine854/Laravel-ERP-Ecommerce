@@ -33,6 +33,8 @@ return new class extends Migration
             $table->unsignedBigInteger('parametre_id');
             $table->foreign('parametre_id')->references('id')->on('parametres')->onDelete('cascade');
             $table->rememberToken();
+            $table->unsignedBigInteger('admin_id')->nullable();
+            $table->foreign('admin_id')->references('id')->on('users');
             $table->timestamps();
         });
     }

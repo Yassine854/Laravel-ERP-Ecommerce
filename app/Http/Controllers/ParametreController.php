@@ -97,8 +97,7 @@ class ParametreController extends Controller
         $parametre->phone = $request->input('phone');
         $parametre->address = $request->input('address');
         $parametre->nature_id = $request->input('nature_id');
-        $parametre->address = $request->input('address');
-
+        $parametre->email = $request->input('email');
         $parametre->description = $request->input('description');
         $parametre->key_word = $request->input('key_word');
         $parametre->temps_travail = $request->input('temps_travail');
